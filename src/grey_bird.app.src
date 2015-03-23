@@ -1,0 +1,15 @@
+%% Feel free to use, reuse and abuse the code in this file.
+
+{application, grey_bird, [
+	{description, "grey_bird wei xin ding yue hao!"},
+	{vsn, "1"},
+	{modules, []},
+	{registered, [grey_bird_sup]},
+	{applications, [
+		kernel,
+		stdlib,
+		cowboy
+	]},
+	{mod, {grey_bird_app, []}},
+	{env, []}
+]}.
