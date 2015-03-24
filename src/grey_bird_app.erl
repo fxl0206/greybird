@@ -16,7 +16,7 @@ start(_Type, _Args) ->
 			{"/", auth_handler, []}
 		]}
 	]),
-	{ok, _} = cowboy:start_http(http, 100, [{port, 8080}], [
+	{ok, _} = cowboy:start_http(http, 100, [{port, 80}], [
 		{env, [{dispatch, Dispatch}]}
 	]),
 	grey_bird_sup:start_link().
