@@ -11,7 +11,7 @@ init(Req, Opts) ->
 	{ok, Req2, Opts}.
 echo(<<"POST">>,Req) ->
 	Token="myluckyfxl",
-	{ok, PostVals, Req2} = cowboy_req:body_qs(Req),
+	{ok, PostVals, _} = cowboy_req:body_qs(Req),
 	Signature = proplists:get_value(<<"signature">>, PostVals),
 	Timestamp = proplists:get_value(<<"timestamp">>, PostVals),
 	Nonce = proplists:get_value(<<"nonce">>, PostVals),
