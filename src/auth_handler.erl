@@ -14,7 +14,6 @@ init(Req, Opts) ->
 maybe_echo(<<"POST">>, true, Req) ->
 	Token="myluckyfxl",
 	{ok, PostVals, _} = cowboy_req:body_qs(Req),
-	Echo = proplists:get_value(<<"echo">>, PostVals),
 	Signature = proplists:get_value(<<"signature">>, PostVals),
 	Timestamp = proplists:get_value(<<"timestamp">>, PostVals),
 	Nonce = proplists:get_value(<<"nonce">>, PostVals),
