@@ -7,11 +7,14 @@
 
 init(Req, Opts) ->
 	Method = cowboy_req:method(Req),
-	Req2 = echo(Method, Req),
+	HasBody = cowboy_req:has_body(Req),
+	Req2 = maybe_echo(Method, HasBody, Req),
 	{ok, Req2, Opts}.
-echo(<<"POST">>,Req) ->
+
+maybe_echo(<<"POST">>, true, Req) ->
 	Token="myluckyfxl",
 	{ok, PostVals, _} = cowboy_req:body_qs(Req),
+	Echo = proplists:get_value(<<"echo">>, PostVals),
 	Signature = proplists:get_value(<<"signature">>, PostVals),
 	Timestamp = proplists:get_value(<<"timestamp">>, PostVals),
 	Nonce = proplists:get_value(<<"nonce">>, PostVals),
@@ -21,4 +24,7 @@ echo(<<"POST">>,Req) ->
 	lists:usort(Tmps),
 	cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain; charset=utf-8">>}
-	], Echostr, Req).
+	], Echostr, Req);
+maybe_echo(_, _, Req) ->
+	%% Method not allowed.
+	cowboy_req:reply(405, Req).
