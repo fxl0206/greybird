@@ -14,6 +14,7 @@ echo(<<"POST">>,undefined,Req) ->
 	Token="myluckyfxl",
 	#{signature:=Signature,timestamp:=Timestamp,nonce:=Nonce,echostr:=Echostr} = cowboy_req:match_qs([echo], Req),
 	Tmps = [Token,Timestamp,Nonce],
+	io:format("~p ~n ~p ~n", [Token, Signature]),
 	lists:usort(Tmps),
 	cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain; charset=utf-8">>}
