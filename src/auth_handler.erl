@@ -7,12 +7,15 @@
 
 init(Req, Opts) ->
 	Method = cowboy_req:method(Req),
-	#{echo := Echo} = cowboy_req:match_qs([echo], Req),
-	Req2 = echo(Method, Echo, Req),
+	Req2 = echo(Method, undefined, Req),
 	{ok, Req2, Opts}.
 echo(<<"POST">>,undefined,Req) ->
 	Token="myluckyfxl",
-	#{signature:=Signature,timestamp:=Timestamp,nonce:=Nonce,echostr:=Echostr} = cowboy_req:match_qs([echo], Req),
+	{ok, PostVals, Req2} = cowboy_req:body_qs(Req),
+	Signature = proplists:get_value(<<"signature">>, PostVals),
+	Timestamp = proplists:get_value(<<"timestamp">>, PostVals),
+	Nonce = proplists:get_value(<<"nonce">>, PostVals),
+	Echostr = proplists:get_value(<<"echostr">>, PostVals),
 	Tmps = [Token,Timestamp,Nonce],
 	io:format("~p ~n ~p ~n", [Token, Signature]),
 	lists:usort(Tmps),
