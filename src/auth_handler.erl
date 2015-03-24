@@ -7,9 +7,9 @@
 
 init(Req, Opts) ->
 	Method = cowboy_req:method(Req),
-	Req2 = echo(Method, undefined, Req),
+	Req2 = echo(Method, Req),
 	{ok, Req2, Opts}.
-echo(<<"POST">>,undefined,Req) ->
+echo(<<"POST">>,Req) ->
 	Token="myluckyfxl",
 	{ok, PostVals, Req2} = cowboy_req:body_qs(Req),
 	Signature = proplists:get_value(<<"signature">>, PostVals),
@@ -21,13 +21,4 @@ echo(<<"POST">>,undefined,Req) ->
 	lists:usort(Tmps),
 	cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain; charset=utf-8">>}
-	], Echostr, Req);
-echo(<<"GET">>, undefined, Req) ->
-	cowboy_req:reply(400, [], <<"Missing echo parameter.">>, Req);
-echo(<<"GET">>, Echo, Req) ->
-	cowboy_req:reply(200, [
-		{<<"content-type">>, <<"text/plain; charset=utf-8">>}
-	], Echo, Req);
-echo(_, _, Req) ->
-	%% Method not allowed.
-	cowboy_req:reply(405, Req).
+	], Echostr, Req).
