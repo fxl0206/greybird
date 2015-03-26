@@ -8,6 +8,7 @@
 	{applications, [
 		kernel,
 		stdlib,
+		xmerl,
 		cowboy
 	]},
 	{mod, {grey_bird_app, []}},
