@@ -9,6 +9,8 @@ init(Req, Opts) ->
 	io:format(" ~p  ~n",[Method]),
 	Req2 = maybe_echo(Method, HasBody, Req),
 	{ok, Req2, Opts}.
+
+%token auth action
 maybe_echo(<<"GET">>, false, Req) ->
 	Token="myluckyfxl",
 	#{signature:=Signature,timestamp:=Timestamp,nonce:=Nonce,echostr:=Echostr} = cowboy_req:match_qs([signature,timestamp,nonce,echostr], Req),
@@ -21,11 +23,12 @@ maybe_echo(<<"GET">>, false, Req) ->
 	cowboy_req:reply(200, [
 		{<<"content-type">>, <<"text/plain; charset=utf-8">>}
 	], Echostr, Req);
+
+%acception message and auto reply action
 maybe_echo(<<"POST">>, true, Req) ->
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
-    Xml = binary_to_list(Body),
-	{FromUserName,ToUserName,Content}=xml_parse(Xml),
+	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
@@ -37,18 +40,19 @@ maybe_echo(<<"POST">>, true, Req) ->
 	cowboy_req:reply(200, [
 		{<<"content-type">>, <<"xml/plain; charset=utf-8">>}
 	], unicode:characters_to_binary(Rep), Req);
+
+%default action
 maybe_echo(_, _, Req) ->
-	%% Method not allowed.
-	io:format(" ~p  ~n",["ttt"]),
+	io:format(" ~p  ~n",["Method not allowed"]),
 	cowboy_req:reply(405, Req).
+
+%weixin xml parse 
 xml_parse(Xml)->
 	%io:format("~p ~n ", [code:get_path()]), 
-	io:format("~p ~n ", [Xml]), 
  	{Doc, _} =xmerl_scan:string(Xml),
-	%io:format(" ~p  ~n",[Doc]),
+	%[{xmlText,[{'Content',10},{xml,1}],
+    %      1,[],"this is a test",cdata}]
 	[{_,_,_,_,Content,_}]=xmerl_xpath:string("/xml/Content/text()", Doc),
 	[{_,_,_,_,FromUserName,_}]=xmerl_xpath:string("/xml/ToUserName/text()", Doc),
 	[{_,_,_,_,ToUserName,_}]=xmerl_xpath:string("/xml/FromUserName/text()", Doc),
-	%[{xmlText,[{'Content',10},{xml,1}],
-    %      1,[],"this is a test",cdata}]
 	{FromUserName,ToUserName,Content}.
