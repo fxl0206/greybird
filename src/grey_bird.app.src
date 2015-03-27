@@ -9,6 +9,7 @@
 		kernel,
 		stdlib,
 		xmerl,
+		compiler,
 		cowboy
 	]},
 	{mod, {grey_bird_app, []}},
