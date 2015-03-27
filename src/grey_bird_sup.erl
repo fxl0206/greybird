@@ -19,5 +19,5 @@ start_link() ->
 %% supervisor.
 
 init([]) ->
-	Procs = [],
+	Procs = [{mysql, {mysql, start_link, [conn,"127.0.0.1",3306,"root","286955","test",undefined,utf8]},permanent, brutal_kill, worker, [mysql]}],
 	{ok, {{one_for_one, 10, 10}, Procs}}.

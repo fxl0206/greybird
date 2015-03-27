@@ -9,6 +9,7 @@
 		kernel,
 		stdlib,
 		xmerl,
+		mysql,
 		cowboy
 	]},
 	{mod, {grey_bird_app, []}},
