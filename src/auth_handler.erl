@@ -27,13 +27,17 @@ maybe_echo(<<"GET">>, false, Req) ->
 %acception message and auto reply action
 maybe_echo(<<"POST">>, true, Req) ->
 	%{data, Result} = 
-        mysql:fetch(conn, <<"insert into wx_msg(msgid,type,content,fuser,tuser) values('1','test','test','test','test')">>),
         %Rows = mysql:get_result_rows(Result),
-	io:format("~p ~n",[Result]),
+	%io:format("~p ~n",[Result]),
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
 	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
-	Rep="<xml>
+        Sql="insert into wx_msg(msgid,type,content,fuser,tuser) values('1','text','"++Content++"','test','test')",
+        mysql:fetch(conn,unicode:characters_to_binary(Sql)),
+	{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
+        Rows = mysql:get_result_rows(Result),
+	io:format("~p ~n",[Rows]),
+        Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
 		<CreateTime>12345678</CreateTime>
