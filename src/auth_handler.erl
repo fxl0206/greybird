@@ -36,13 +36,14 @@ maybe_echo(<<"POST">>, true, Req) ->
         mysql:fetch(conn,unicode:characters_to_binary(Sql)),
 	{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
         Rows = mysql:get_result_rows(Result),
+	Ctent=[get_top6(Rows)|[<<"\n\n">>|Content]],
 	io:format("~p ~n",[Rows]),
         Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
 		<CreateTime>12345678</CreateTime>
 		<MsgType><![CDATA[text]]></MsgType>
-		<Content><![CDATA[自动回复：哈儿 你说了："++Content++"]]></Content>
+		<Content><![CDATA[自动回复：哈儿 你说了："++Ctent++"]]></Content>
 		</xml>",
 	io:format("~ts",[Rep]),
 	cowboy_req:reply(200, [
@@ -53,7 +54,14 @@ maybe_echo(<<"POST">>, true, Req) ->
 maybe_echo(_, _, Req) ->
 	io:format(" ~p  ~n",["Method not allowed"]),
 	cowboy_req:reply(405, Req).
-
+get_top6(Rows)->
+	case Rows of 
+		[] ->
+			[];
+		[Row|Ohters] ->
+			[_|[_|[Content|_]]]=Row,
+			[Content|[<<"\n\n">>|get_top6(Ohters)]]
+    end.			
 %weixin xml parse 
 xml_parse(Xml)->
 	%io:format("~p ~n ", [code:get_path()]), 
