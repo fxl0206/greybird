@@ -26,7 +26,8 @@ maybe_echo(<<"GET">>, false, Req) ->
 
 %acception message and auto reply action
 maybe_echo(<<"POST">>, true, Req) ->
-	{data, Result} = mysql:fetch(conn, <<"insert into wx_msg(msgid,type,content,fuser,tuser) values('1','test','test','test','test')">>),
+	%{data, Result} = 
+        mysql:fetch(conn, <<"insert into wx_msg(msgid,type,content,fuser,tuser) values('1','test','test','test','test')">>),
         %Rows = mysql:get_result_rows(Result),
 	io:format("~p ~n",[Result]),
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),

@@ -5,11 +5,11 @@
 	{vsn, "1"},
 	{modules, []},
 	{registered, [grey_bird_sup]},
+	{included_applications,[mysql]},
 	{applications, [
 		kernel,
 		stdlib,
 		xmerl,
-		erlang_mysql,
 		cowboy
 	]},
 	{mod, {grey_bird_app, []}},
