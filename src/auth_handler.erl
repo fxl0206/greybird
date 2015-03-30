@@ -32,13 +32,18 @@ maybe_echo(<<"POST">>, true, Req) ->
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
 	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
-        Sql="insert into wx_msg(msgid,type,content,fuser,tuser) values('1','text','"++Content++"','test','test')",
-        mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-	{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
-        Rows = mysql:get_result_rows(Result),
-	Ctent=get_top6(Rows),
-	io:format("~p ~n",[Rows]),
-        Rep="<xml>
+	case Content of
+         "LS" ->        
+		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
+        	Rows = mysql:get_result_rows(Result),
+		Ctent=get_top6asc(Rows),
+		io:format("~p ~n",[Rows]);
+         _ ->
+		Sql="insert into wx_msg(msgid,type,content,fuser,tuser) values('1','text','"++Content++"','test','test')",
+        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
+           	Ctent=Content
+        end,
+	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
 		<CreateTime>12345678</CreateTime>
@@ -61,6 +66,14 @@ get_top6(Rows)->
 		[Row|Ohters] ->
 			[_|[_|[Content|_]]]=Row,
 			[Content|[<<"\n\n">>|get_top6(Ohters)]]
+    end.			
+get_top6asc(Rows)->
+	case Rows of 
+		[] ->
+			[];
+		[Row|Ohters] ->
+			[_|[_|[Content|_]]]=Row,
+			[get_top6asc(Ohters)|["\n\n",Content]]
     end.			
 %weixin xml parse 
 xml_parse(Xml)->
