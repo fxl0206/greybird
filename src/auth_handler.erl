@@ -36,7 +36,7 @@ maybe_echo(<<"POST">>, true, Req) ->
         mysql:fetch(conn,unicode:characters_to_binary(Sql)),
 	{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
         Rows = mysql:get_result_rows(Result),
-	Ctent=[get_top6(Rows)|[<<"\n\n">>|Content]],
+	Ctent=get_top6(Rows),
 	io:format("~p ~n",[Rows]),
         Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
