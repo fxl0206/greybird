@@ -34,12 +34,12 @@ maybe_echo(<<"POST">>, true, Req) ->
 	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
 	case Content of
          "LS" ->        
-		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc limit 6">>),
+		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
         	Rows = mysql:get_result_rows(Result),
 		Ctent=get_top6asc(Rows),
 		io:format("~p ~n",[Rows]);
          _ ->
-		Sql="insert into wx_msg(msgid,type,content,fuser,tuser) values('1','text','"++Content++"','test','test')",
+		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
         	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
            	Ctent=Content
         end,
@@ -72,8 +72,13 @@ get_top6asc(Rows)->
 		[] ->
 			[];
 		[Row|Ohters] ->
-			[_|[_|[Content|_]]]=Row,
-			[get_top6asc(Ohters)|["\n\n",Content]]
+			[MsgId|[MsgType|[Content|[Fuser|[Tuser|[Seq|[CreateTime|_]]]]]]]=Row,
+			{date,{Year,Month,Day}}=CreateTime,
+			Date=lists:flatten(
+      				io_lib:format("~4..0w-~2..0w-~2..0w",
+            			[Year, Month, Day])),
+			io:format("~ts",[Date]),
+			[get_top6asc(Ohters)|["\n\n","["++Date++"]"++Content]]
     end.			
 %weixin xml parse 
 xml_parse(Xml)->
