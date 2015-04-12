@@ -36,19 +36,20 @@ maybe_echo(<<"POST">>, true, Req) ->
          "LS" ->        
 		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
         	Rows = mysql:get_result_rows(Result),
-		Ctent=get_top6asc(Rows),
+		Msg=get_top6asc(Rows),
+		Ctent="历史纪录:\n"++Msg,
 		io:format("~p ~n",[Rows]);
          _ ->
 		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
         	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-           	Ctent=Content
+           	Ctent="你说了："++Content
         end,
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
 		<CreateTime>12345678</CreateTime>
 		<MsgType><![CDATA[text]]></MsgType>
-		<Content><![CDATA[自动回复：哈儿 你说了："++Ctent++"]]></Content>
+		<Content><![CDATA["++Ctent++"]]></Content>
 		</xml>",
 	io:format("~ts",[Rep]),
 	cowboy_req:reply(200, [
@@ -77,7 +78,7 @@ get_top6asc(Rows)->
 			Date=lists:flatten(
       				io_lib:format("~4..0w-~2..0w-~2..0w",
             			[Year, Month, Day])),
-			io:format("~ts",[Date]),
+			%io:format("~ts",[Date]),
 			[get_top6asc(Ohters)|["\n\n","["++Date++"]"++Content]]
     end.			
 %weixin xml parse 
