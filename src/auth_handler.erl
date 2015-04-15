@@ -37,12 +37,12 @@ maybe_echo(<<"POST">>, true, Req) ->
 		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
         	Rows = mysql:get_result_rows(Result),
 		Msg=get_top6asc(Rows),
-		Ctent="历史纪录:\n"++Msg,
+		Ctent="灰色的记事本:"++Msg,
 		io:format("~p ~n",[Rows]);
          _ ->
 		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
         	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-           	Ctent="你说了："++Content
+           	Ctent="你刚写了日志："++Content
         end,
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
