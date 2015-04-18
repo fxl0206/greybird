@@ -2,6 +2,7 @@
 
 %% @doc GET echo handler.
 -module(auth_handler).
+-include_lib("amqp_client/include/amqp_client.hrl").
 -export([init/2]).
 init(Req, Opts) ->
 	Method = cowboy_req:method(Req),
@@ -31,6 +32,8 @@ maybe_echo(<<"POST">>, true, Req) ->
 	%io:format("~p ~n",[Result]),
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
+	rmqpool:send_msg({msg,Body}),
+	%main(Body),
 	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
 	case Content of
          "LS" ->        
@@ -60,14 +63,19 @@ maybe_echo(<<"POST">>, true, Req) ->
 maybe_echo(_, _, Req) ->
 	io:format(" ~p  ~n",["Method not allowed"]),
 	cowboy_req:reply(405, Req).
-get_top6(Rows)->
-	case Rows of 
-		[] ->
-			[];
-		[Row|Ohters] ->
-			[_|[_|[Content|_]]]=Row,
-			[Content|[<<"\n\n">>|get_top6(Ohters)]]
-    end.			
+main(Msg) ->
+    {ok, Connection} =amqp_connection:start(#amqp_params_network{host = "localhost"}),
+    {ok, Channel} = amqp_connection:open_channel(Connection),
+    amqp_channel:call(Channel, #'queue.declare'{queue = <<"hello">>}),
+    amqp_channel:cast(Channel,
+                      #'basic.publish'{
+                        exchange = <<"">>,
+                        routing_key = <<"hello">>},
+                      #amqp_msg{payload = Msg}),
+    io:format(" [x] Send ~ts",[Msg]),
+    ok = amqp_channel:close(Channel),
+    ok = amqp_connection:close(Connection),
+    ok.
 get_top6asc(Rows)->
 	case Rows of 
 		[] ->
