@@ -2,11 +2,10 @@
 -behaviour(gen_server).
 -include_lib("amqp_client/include/amqp_client.hrl").
 -export([start/0,start_link/0,init/1,handle_call/3,handle_cast/2,code_change/3,handle_info/2,terminate/2]).
--export([send_msg/1]).
+-export([send_msg/1,send_to_mq/2]).
 start_link() ->   
  gen_server:start_link({local, rmqpool}, rmqpool, [], []).
 send_msg(Msg) ->  
-  io:format(" #############################################[x] Sent 'Hello World!'~n"),
 	gen_server:call(rmqpool, Msg).
 send(Msg) ->   
  gen_server:cast(rmqpool, Msg).
@@ -14,6 +13,7 @@ init(_Args) ->
 register(ch1,spawn(rmqpool,start,[])), 
 {ok, ok}.
 handle_call(Msg, _From, State) -> 
+   io:format("#################################### ~n ~p  ~n",[Msg]),
    ch1!Msg,
    {reply,ok,State}.   
 handle_cast({msg,_}, Chs) -> 
@@ -36,12 +36,13 @@ start() ->
 loop2(Channel) -> 
      receive 
 	{msg,Msg} -> 
-		amqp_channel:cast(Channel,
+		  spawn(rmqpool,send_to_mq,[Channel,Msg]),
+                  loop2(Channel)
+	end.
+send_to_mq(Channel,Msg)->
+	amqp_channel:cast(Channel,
                       #'basic.publish'{
                         exchange = <<"">>,
                         routing_key = <<"hello">>},
-                      #amqp_msg{payload = <<"Hello World!">>}),
-        	  io:format(" [x] Sent 'Hello World!'~n"),
-                  io:format("Receive abc. ~n "),
-                  loop2(Channel)
-	end.
+                      #amqp_msg{payload = Msg}),
+	ok.

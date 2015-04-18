@@ -32,9 +32,8 @@ maybe_echo(<<"POST">>, true, Req) ->
 	%io:format("~p ~n",[Result]),
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
-	rmqpool:send_msg({msg,Body}),
-	%main(Body),
-	{FromUserName,ToUserName,Content}=xml_parse(binary_to_list(Body)),
+	MetaData=xml_parse(binary_to_list(Body)),
+	{FromUserName,ToUserName,Content}=MetaData,
 	case Content of
          "LS" ->        
 		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
@@ -43,9 +42,10 @@ maybe_echo(<<"POST">>, true, Req) ->
 		Ctent="灰色的记事本:"++Msg,
 		io:format("~p ~n",[Rows]);
          _ ->
-		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
-        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-           	Ctent="你刚写了日志："++Content
+		%Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
+        	%mysql:fetch(conn,unicode:characters_to_binary(Sql)),
+           	rmqpool:send_msg({msg,Body}),
+		Ctent="你刚写了日志："++Content
         end,
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
