@@ -33,20 +33,23 @@ maybe_echo(<<"POST">>, true, Req) ->
 	{ok, [{Body,_}], _} = cowboy_req:body_qs(Req),
 	io:format("~ts",[Body]),
 	MetaData=xml_parse(binary_to_list(Body)),
+	rmq_worker:cast_msg(Body),
 	{FromUserName,ToUserName,Content}=MetaData,
 	case Content of
          "LS" ->        
-		{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
-        	Rows = mysql:get_result_rows(Result),
-		Msg=get_top6asc(Rows),
-		Ctent="灰色的记事本:"++Msg,
-		io:format("~p ~n",[Rows]);
-	"TS" ->
-		rmqpool:send_msg({msg,Body});		
+			{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
+	        	Rows = mysql:get_result_rows(Result),
+			Msg=get_top6asc(Rows),
+			Ctent="灰色的记事本:"++Msg,
+			io:format("~p ~n",[Rows]);
+		"TS" ->
+		    Ctent="收到一条测试消息："++Content,
+		    io:format("~n ~p @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  ~n",[Ctent]),
+			rmq_worker:send_msg(Body);
          _ ->
-		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
-        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-		Ctent="你刚写了日志："++Content
+			Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
+	        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
+			Ctent="你刚写了日志："++Content
         end,
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
