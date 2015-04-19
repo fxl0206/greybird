@@ -41,10 +41,11 @@ maybe_echo(<<"POST">>, true, Req) ->
 		Msg=get_top6asc(Rows),
 		Ctent="灰色的记事本:"++Msg,
 		io:format("~p ~n",[Rows]);
+	"TS" ->
+		rmqpool:send_msg({msg,Body});		
          _ ->
-		%Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
-        	%mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-           	rmqpool:send_msg({msg,Body}),
+		Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
+        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
 		Ctent="你刚写了日志："++Content
         end,
 	Rep="<xml>
