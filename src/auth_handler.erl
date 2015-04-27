@@ -36,16 +36,33 @@ maybe_echo(<<"POST">>, true, Req) ->
 	rmq_worker:cast_msg(Body),
 	{FromUserName,ToUserName,Content}=MetaData,
 	case Content of
+        %查询记事本所有内容
          "LS" ->        
 			{data, Result} = mysql:fetch(conn,<<"select * from wx_msg order by seq desc">>),
 	        	Rows = mysql:get_result_rows(Result),
 			Msg=get_top6asc(Rows),
 			Ctent="灰色的记事本:"++Msg,
 			io:format("~p ~n",[Rows]);
+        %RabitMQ 测试
 		"TS" ->
 		    Ctent="收到一条测试消息："++Content,
 		    io:format("~n ~p @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  ~n",[Ctent]),
 			rmq_worker:send_msg(Body);
+        %匹配"CX"打头的关键字，查询并返回查询结果
+        [67|[88|Condition]] ->
+            case Condition of
+                [] ->
+                    Ctent="查询条件不符合规范，请确认！";
+                _ ->
+                    Sql="select * from azw_book where name like '%"++Condition++"%'",
+                    io:format("~ts",[Sql]),
+                    {data, Result} = mysql:fetch(conn,unicode:characters_to_binary(Sql)),
+                    Rows = mysql:get_result_rows(Result),
+                    Msg=parse_azw(Rows),
+                    Ctent="查询结果:"++Msg
+            end,
+            rmq_worker:send_msg(Body);
+        %在记事本中记录日志
          _ ->
 			Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
 	        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
@@ -67,6 +84,8 @@ maybe_echo(<<"POST">>, true, Req) ->
 maybe_echo(_, _, Req) ->
 	io:format(" ~p  ~n",["Method not allowed"]),
 	cowboy_req:reply(405, Req).
+
+%发送消息到RabbitMQ
 main(Msg) ->
     {ok, Connection} =amqp_connection:start(#amqp_params_network{host = "localhost"}),
     {ok, Channel} = amqp_connection:open_channel(Connection),
@@ -80,6 +99,7 @@ main(Msg) ->
     ok = amqp_channel:close(Channel),
     ok = amqp_connection:close(Connection),
     ok.
+%记录转换
 get_top6asc(Rows)->
 	case Rows of 
 		[] ->
@@ -92,7 +112,15 @@ get_top6asc(Rows)->
             			[Year, Month, Day])),
 			%io:format("~ts",[Date]),
 			[get_top6asc(Ohters)|["\n\n","["++Date++"]"++Content]]
-    end.			
+    end.	
+parse_azw(Rows)->
+    case Rows of 
+        [] ->
+            [];
+        [Row|Ohters] ->
+            [Id|[Name|[Path|[Index|[DownPath|_]]]]]=Row,
+            [parse_azw(Ohters)|["\n\n",Name]]
+    end.    		
 %weixin xml parse 
 xml_parse(Xml)->
 	%io:format("~p ~n ", [code:get_path()]), 
