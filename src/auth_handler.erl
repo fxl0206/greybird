@@ -49,7 +49,7 @@ maybe_echo(<<"POST">>, true, Req) ->
 		    io:format("~n ~p @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  ~n",[Ctent]),
 			rmq_worker:send_msg(Body);
         %匹配"CX"打头的关键字，查询并返回查询结果
-        [67|[88|Condition]] ->
+        [$C|[$X|Condition]] ->
             case Condition of
                 [] ->
                     Ctent="查询条件不符合规范，请确认！";
@@ -68,12 +68,21 @@ maybe_echo(<<"POST">>, true, Req) ->
 	        	mysql:fetch(conn,unicode:characters_to_binary(Sql)),
 			Ctent="你刚写了日志："++Content
         end,
+    {{Year,Month,Day},{Hour,Min,Second}}=calendar:local_time(),
+     case {Month,Day}  of 
+        {4,27} ->
+           Spstr="\n\n祝小鸟生日快乐，天天开心！";
+        {5,10} ->
+           Spstr="\n\n祝小鸟生日快乐，天天开心！";
+        _ ->
+           Spstr=" "
+      end,
 	Rep="<xml>
 		<ToUserName><![CDATA["++ToUserName++"]]></ToUserName>
 		<FromUserName><![CDATA["++FromUserName++"]]></FromUserName>
 		<CreateTime>12345678</CreateTime>
 		<MsgType><![CDATA[text]]></MsgType>
-		<Content><![CDATA["++Ctent++"]]></Content>
+		<Content><![CDATA["++Ctent++Spstr++"]]></Content>
 		</xml>",
 	io:format("~ts",[Rep]),
 	cowboy_req:reply(200, [

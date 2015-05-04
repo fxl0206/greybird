@@ -8,12 +8,13 @@
 -export([start/2]).
 -export([stop/1]).
 
-%% API.
+%% API. 
 
 start(_Type, _Args) ->
 	Dispatch = cowboy_router:compile([
 		{'_', [
-			{"/", auth_handler, []}
+			{"/", auth_handler, []},
+			{"/qy", qy_handler, []}
 		]}
 	]),
 	{ok, _} = cowboy:start_http(http, 100, [{port, 80}], [
