@@ -13,7 +13,7 @@
 start(_Type, _Args) ->
 	Dispatch = cowboy_router:compile([
 		{'_', [
-			{"/", auth_handler, []},
+		    {"/", auth_handler, []},
 			{"/qy", qy_handler, []}
 		]}
 	]),
