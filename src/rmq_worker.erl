@@ -31,7 +31,7 @@ mq_send(Channel,Msg) ->
                       #'basic.publish'{
                         exchange = <<"">>,
                         routing_key = ?QUEUE},
-                      #amqp_msg{payload = Msg}),
+                      #amqp_msg{props = #'P_basic'{delivery_mode = 2}, payload = Msg}),
 	ok.
 init([]) ->
 	io_log("init pool"),
@@ -43,9 +43,9 @@ init_pool(Poolnum,Queue) ->
 		0 ->
 			[];
 		_ ->
-			{ok, Connection} =amqp_connection:start(#amqp_params_network{host = "localhost"}),
+			{ok, Connection} =amqp_connection:start(#amqp_params_network{username = <<"admin">>,password = <<"admin">> ,host = "123.56.90.92"}),
 			{ok, Channel} = amqp_connection:open_channel(Connection),
-			amqp_channel:call(Channel, #'queue.declare'{queue =Queue}),
+			amqp_channel:call(Channel, #'queue.declare'{queue =Queue,durable = true}),
 			[{Channel,Connection}|init_pool(Poolnum-1,Queue)]
 	end.
 
