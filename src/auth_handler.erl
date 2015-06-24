@@ -50,10 +50,10 @@ rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "text" , data
             end;
         %在记事本中记录日志
          "NEW_NOTE" ->
-			Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
-	        status_server:cache_msg(ToUserName,Sql),
+			     Sql="insert into wx_msg(msgid,type,content,fuser,tuser,create_time) values('1','text','"++Content++"','"++FromUserName++"','"++ToUserName++"',now())",
+	         status_server:cache_msg(ToUserName,Sql),
             % mysql:fetch(conn,unicode:characters_to_binary(Sql)),
-			Ctent="你刚写了日志："++Content++"\n\n确认提交请到记事本菜单操作!"
+			     Ctent="你刚写了日志："++Content++"\n\n确认提交请到记事本菜单操作!"
         end,
 	rep_return(ToUserName,FromUserName,Ctent,Req);
 
@@ -93,8 +93,11 @@ rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data
             Ctent="即将考虑实现!",
             rep_return(ToUserName,FromUserName,Ctent,Req);
 
-rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data = ["CLICK"|["DO_TEST1"|[]]]}, Req) ->
-            Ctent="即将考虑实现!",
+rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data = ["CLICK"|["DO_TIME"|[]]]}, Req) ->
+            StartDate={{2014,12,21}, {0,0,0}},
+            CurDate=calendar:local_time(),
+            {Res,{Hour,Min,Second}}=calendar:time_difference(StartDate, CurDate),
+            Ctent="我们在一起"++integer_to_list(Res)++"天啦！",
             rep_return(ToUserName,FromUserName,Ctent,Req);
 
 rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data = ["CLICK"|["DO_TEST2"|[]]]}, Req) ->

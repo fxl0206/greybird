@@ -20,7 +20,7 @@ start_link() ->
 
 init([]) ->
 	Procs = [{mysql, {mysql, start_link, [conn,"127.0.0.1",3306,"root","286955","greybird",undefined,utf8]},permanent, brutal_kill, worker, [mysql]},
-		{mq_sup, {mq_sup, start_link, []},permanent, brutal_kill, supervisor, [mq_sup]},
+		%{mq_sup, {mq_sup, start_link, []},permanent, brutal_kill, supervisor, [mq_sup]},
         {status_sup, {status_sup, start_link, []},permanent, brutal_kill, supervisor, [status_sup]}
 		],
 	%Procs=[],
