@@ -27,11 +27,15 @@ handle_call({send_msg,Msg},_From,State) ->
 	{reply,data,State}.
 
 mq_send(Channel,Msg) ->
+	% amqp_channel:call(Channel,#'dtx.select'{}),
+	% amqp_channel:call(Channel,#'dtx.start'{dtx_identifier=1001}),
 	amqp_channel:cast(Channel,
                       #'basic.publish'{
                         exchange = <<"">>,
                         routing_key = ?QUEUE},
                       #amqp_msg{props = #'P_basic'{delivery_mode = 2}, payload = Msg}),
+	% amqp_channel:call(Channel,#'dtx.end'{dtx_identifier=1001}),
+	% amqp_channel:call(Channel,#'dtx.commit'{dtx_identifier=1001}),
 	ok.
 init([]) ->
 	io_log("init pool"),
