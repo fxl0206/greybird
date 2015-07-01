@@ -96,8 +96,23 @@ rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data
 rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data = ["CLICK"|["DO_TIME"|[]]]}, Req) ->
             StartDate={{2014,12,21}, {0,0,0}},
             CurDate=calendar:local_time(),
+            {{Year,Month,Day},_}=CurDate,
+            case (Day>=21) of 
+                true ->
+                  AMoth = integer_to_list((Year-1-2014)*12+Month)++"个月",
+                  Cdate=Day-21+1;
+                false ->
+                  AMoth = integer_to_list((Year-1-2014)*12+Month-1)++"个月",
+                  Cdate=calendar:last_day_of_the_month(Year,Month-1)-21+1+Day
+            end,
+            case (Cdate>0) of
+              true ->
+                ACMoth=AMoth++"零"++integer_to_list(Cdate)++"天";
+              false ->
+                ACMoth=AMoth
+            end,
             {Res,{Hour,Min,Second}}=calendar:time_difference(StartDate, CurDate),
-            Ctent="我们在一起"++integer_to_list(Res)++"天啦！",
+            Ctent="满满和峰峰在一起"++ACMoth++"啦！共计"++integer_to_list((Res+2))++"天",
             rep_return(ToUserName,FromUserName,Ctent,Req);
 
 rep_post(#meta{fuser = FromUserName, tuser = ToUserName ,msgtype = "event", data = ["CLICK"|["DO_TEST2"|[]]]}, Req) ->
